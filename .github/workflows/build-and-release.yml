@@ -77,7 +77,7 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         tag_name: build-${{ steps.commit.outputs.sha_short }}
-        name: "Symphonic Rain Chinese Translation - ${{ steps.commit.outputs.commit_date }}"
+        name: "Build ${{ steps.commit.outputs.sha_short }} - ${{ steps.commit.outputs.commit_date }}"
         body: |
           ## Automated Build
 
@@ -85,7 +85,7 @@ jobs:
           **Commit Hash**: ${{ steps.commit.outputs.sha_short }}
           **Build Date**: ${{ steps.commit.outputs.commit_date }}
 
-          This is an automatically built PDF version based on the latest commit.
+          This is an automatically built PDF version based on commit ${{ steps.commit.outputs.sha_short }}.
 
         files: |
           book.pdf
@@ -121,14 +121,17 @@ jobs:
         # Create new timestamped release and mark it as the only latest
         echo "📦 Creating new latest release: $RELEASE_TAG"
         gh release create "$RELEASE_TAG" book.pdf \
-          --title "Symphonic Rain Chinese Translation - Latest" \
-          --notes "This is the latest automatically built version.
+          --title "Symphonic Rain Chinese Translation - Latest (${{ steps.commit.outputs.commit_date }})" \
+          --notes "🎯 **This is the LATEST version** - Always download this one for the most recent translation.
 
         **Latest Commit**: ${{ steps.commit.outputs.commit_message }}
         **Commit Hash**: ${{ steps.commit.outputs.sha_short }}
         **Build Date**: ${{ steps.commit.outputs.commit_date }}
 
-        Download \`book.pdf\` to get the latest version of the Chinese translation." \
+        📥 Download \`book.pdf\` to get the latest version of the Chinese translation.
+
+        ---
+        *This release is automatically updated with each new commit.*" \
           --latest
 
         echo "✅ Latest release created successfully!"
