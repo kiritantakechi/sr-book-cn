@@ -12,7 +12,8 @@
   outline,
 ) = book(
   cover-image: "../assets/cover.png",
-  date: datetime(year: 2025, month: 9, day: 1),
+  // date: datetime(year: 2025, month: 9, day: 1),
+  date: datetime.today(),
   twoside: false,
   info: (
     author: "西川真音",
