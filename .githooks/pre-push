@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# Pre-push hook to handle 'latest' tag conflicts
+# This script runs before every git push
+
+echo "🔍 Checking for 'latest' tag conflicts..."
+
+# Fetch the latest tags from remote
+git fetch --tags --quiet 2>/dev/null || true
+
+# Check if remote has a 'latest' tag
+if git ls-remote --tags origin | grep -q "refs/tags/latest"; then
+    echo "⚠️  Remote 'latest' tag detected"
+    
+    # Check if we have a local 'latest' tag
+    if git tag -l | grep -q "^latest$"; then
+        echo "🗑️  Removing local 'latest' tag to avoid conflicts..."
+        git tag -d latest
+        echo "✅ Local 'latest' tag removed"
+    fi
+    
+    # Check if we're trying to push a 'latest' tag
+    while read local_ref local_sha remote_ref remote_sha; do
+        if [[ "$remote_ref" == "refs/tags/latest" ]]; then
+            echo "❌ Blocked: Attempting to push 'latest' tag"
+            echo "   The 'latest' tag is managed by GitHub Actions"
+            echo "   Your push will continue without the 'latest' tag"
+            exit 1
+        fi
+    done
+fi
+
+echo "✅ No tag conflicts detected, proceeding with push..."
+exit 0
