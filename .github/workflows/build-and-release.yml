@@ -41,15 +41,15 @@ jobs:
         
     - name: Build PDF
       run: |
-        # Build the book PDF from template
-        typst compile template/book.typ book.pdf
-        
+        # Build the book PDF from template with project root
+        typst compile --root . template/book.typ book.pdf
+
         # Verify PDF was created
         if [ ! -f "book.pdf" ]; then
           echo "Error: PDF was not generated"
           exit 1
         fi
-        
+
         # Show PDF info
         ls -la book.pdf
         
