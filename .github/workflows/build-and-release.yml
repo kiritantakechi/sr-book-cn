@@ -77,16 +77,16 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         tag_name: build-${{ steps.commit.outputs.sha_short }}
-        name: "交响乐之雨中文译本 - ${{ steps.commit.outputs.commit_date }}"
+        name: "Symphonic Rain Chinese Translation - ${{ steps.commit.outputs.commit_date }}"
         body: |
-          ## 自动构建版本
-          
-          **提交信息**: ${{ steps.commit.outputs.commit_message }}
-          **提交哈希**: ${{ steps.commit.outputs.sha_short }}
-          **构建日期**: ${{ steps.commit.outputs.commit_date }}
-          
-          这是基于最新提交自动构建的PDF版本。
-          
+          ## Automated Build
+
+          **Commit Message**: ${{ steps.commit.outputs.commit_message }}
+          **Commit Hash**: ${{ steps.commit.outputs.sha_short }}
+          **Build Date**: ${{ steps.commit.outputs.commit_date }}
+
+          This is an automatically built PDF version based on the latest commit.
+
         files: |
           book.pdf
         draft: false
@@ -103,13 +103,13 @@ jobs:
         
         # Create new 'latest' tag and release
         gh release create latest book.pdf \
-          --title "交响乐之雨中文译本 - 最新版本" \
-          --notes "这是最新的自动构建版本。
+          --title "Symphonic Rain Chinese Translation - Latest" \
+          --notes "This is the latest automatically built version.
 
-        **最新提交**: ${{ steps.commit.outputs.commit_message }}
-        **提交哈希**: ${{ steps.commit.outputs.sha_short }}
-        **构建日期**: ${{ steps.commit.outputs.commit_date }}
-        
-        下载 \`book.pdf\` 获取最新版本的中文译本。"
+        **Latest Commit**: ${{ steps.commit.outputs.commit_message }}
+        **Commit Hash**: ${{ steps.commit.outputs.sha_short }}
+        **Build Date**: ${{ steps.commit.outputs.commit_date }}
+
+        Download \`book.pdf\` to get the latest version of the Chinese translation."
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
