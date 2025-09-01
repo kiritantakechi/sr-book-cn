@@ -8,14 +8,14 @@ echo "🔧 Setting up Git hooks..."
 mkdir -p .git/hooks
 
 # Copy pre-push hook
-cp .githooks/pre-push .git/hooks/pre-push
+cp scripts/.githooks/pre-push .git/hooks/pre-push
 
 # Make hooks executable
 chmod +x .git/hooks/pre-push
-chmod +x .githooks/pre-push
+chmod +x scripts/.githooks/pre-push
 
 # Configure Git to use our hooks directory (optional, for team sharing)
-git config core.hooksPath .githooks
+git config core.hooksPath scripts/.githooks
 
 echo "✅ Git hooks installed successfully!"
 echo ""
@@ -25,4 +25,4 @@ echo "  - Remove local 'latest' tags that conflict with remote"
 echo "  - Prevent accidental pushing of 'latest' tags"
 echo ""
 echo "To share these hooks with your team, they should run:"
-echo "  ./setup-hooks.sh"
+echo "  ./scripts/setup-hooks.sh"
