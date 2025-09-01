@@ -1,0 +1,110 @@
+name: Build and Release PDF
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Typst
+      uses: typst-community/setup-typst@v3
+      with:
+        typst-version: latest
+        
+    - name: Install fonts
+      run: |
+        # Create fonts directory for system fonts
+        sudo mkdir -p /usr/share/fonts/truetype/custom
+        
+        # Copy project fonts to system fonts directory
+        sudo cp fonts/*.ttf /usr/share/fonts/truetype/custom/ || true
+        
+        # Copy Times New Roman fonts if they exist
+        if [ -d "fonts/TimesNewRoman" ]; then
+          sudo cp fonts/TimesNewRoman/*.ttf /usr/share/fonts/truetype/custom/ || true
+        fi
+        
+        # Update font cache
+        sudo fc-cache -fv
+        
+        # List available fonts for debugging
+        fc-list | grep -i "times\|simsun\|simhei\|kaiti\|fangsong" || echo "Custom fonts may not be loaded"
+        
+    - name: Build PDF
+      run: |
+        # Build the book PDF from template
+        typst compile template/book.typ book.pdf
+        
+        # Verify PDF was created
+        if [ ! -f "book.pdf" ]; then
+          echo "Error: PDF was not generated"
+          exit 1
+        fi
+        
+        # Show PDF info
+        ls -la book.pdf
+        
+    - name: Upload PDF as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: sr-book-cn-pdf
+        path: book.pdf
+        retention-days: 30
+        
+    - name: Get commit info
+      id: commit
+      run: |
+        echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        echo "commit_message=$(git log -1 --pretty=%B | head -1)" >> $GITHUB_OUTPUT
+        echo "commit_date=$(git log -1 --pretty=%cd --date=short)" >> $GITHUB_OUTPUT
+        
+    - name: Create Release
+      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: build-${{ steps.commit.outputs.sha_short }}
+        name: "交响乐之雨中文译本 - ${{ steps.commit.outputs.commit_date }}"
+        body: |
+          ## 自动构建版本
+          
+          **提交信息**: ${{ steps.commit.outputs.commit_message }}
+          **提交哈希**: ${{ steps.commit.outputs.sha_short }}
+          **构建日期**: ${{ steps.commit.outputs.commit_date }}
+          
+          这是基于最新提交自动构建的PDF版本。
+          
+        files: |
+          book.pdf
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Update latest release
+      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+      run: |
+        # Delete previous 'latest' tag and release if it exists
+        gh release delete latest --yes || true
+        git push --delete origin latest || true
+        
+        # Create new 'latest' tag and release
+        gh release create latest book.pdf \
+          --title "交响乐之雨中文译本 - 最新版本" \
+          --notes "这是最新的自动构建版本。
+
+        **最新提交**: ${{ steps.commit.outputs.commit_message }}
+        **提交哈希**: ${{ steps.commit.outputs.sha_short }}
+        **构建日期**: ${{ steps.commit.outputs.commit_date }}
+        
+        下载 \`book.pdf\` 获取最新版本的中文译本。"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
