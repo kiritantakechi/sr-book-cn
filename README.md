@@ -1,0 +1,1 @@
+A Chinese unofficial translation of Symphonic Rain.
