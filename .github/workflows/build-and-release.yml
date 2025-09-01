@@ -100,15 +100,25 @@ jobs:
         # Use a timestamp-based approach to avoid tag conflicts
         RELEASE_TAG="latest-$(date +%Y%m%d-%H%M%S)"
 
-        # Delete old 'latest' releases (keep only the most recent 3)
-        echo "🧹 Cleaning up old latest releases..."
-        gh release list --limit 50 | grep "latest-" | tail -n +4 | while read line; do
+        # First, remove the "latest" flag from all existing releases
+        echo "🏷️ Removing 'latest' flag from all existing releases..."
+        gh release list --limit 50 | while read line; do
+          tag=$(echo "$line" | awk '{print $3}')
+          if [ "$tag" != "Draft" ] && [ "$tag" != "" ]; then
+            echo "Updating release: $tag"
+            gh release edit "$tag" --latest=false 2>/dev/null || true
+          fi
+        done
+
+        # Clean up old timestamped releases (keep only the most recent 5)
+        echo "🧹 Cleaning up old timestamped releases..."
+        gh release list --limit 50 | grep "latest-" | tail -n +6 | while read line; do
           tag=$(echo "$line" | awk '{print $3}')
           echo "Deleting old release: $tag"
           gh release delete "$tag" --yes 2>/dev/null || true
         done
 
-        # Create new timestamped release and mark it as latest
+        # Create new timestamped release and mark it as the only latest
         echo "📦 Creating new latest release: $RELEASE_TAG"
         gh release create "$RELEASE_TAG" book.pdf \
           --title "Symphonic Rain Chinese Translation - Latest" \
