@@ -46,12 +46,11 @@ fi
 echo ""
 echo "🧹 Step 2: Cleaning up old build releases (keeping 5 most recent)..."
 
-# Get all build releases, sort by date, and delete old ones
-BUILD_RELEASES=$(gh release list --limit 50 --json tagName,name,createdAt | jq -r '.[] | select(.name | startswith("Build ")) | [.createdAt, .tagName] | @tsv' | sort -r | tail -n +6)
+# Get all build releases, sort by tag name (which now includes timestamp), and delete old ones
+BUILD_RELEASES=$(gh release list --limit 50 --json tagName,name | jq -r '.[] | select(.name | startswith("Build ")) | .tagName' | sort -r | tail -n +6)
 
 if [ -n "$BUILD_RELEASES" ]; then
-    echo "$BUILD_RELEASES" | while read -r line; do
-        tag=$(echo "$line" | cut -f2)
+    echo "$BUILD_RELEASES" | while read -r tag; do
         if [ -n "$tag" ]; then
             echo "  🗑️ Deleting old build release: $tag"
             gh release delete "$tag" --yes --cleanup-tag 2>/dev/null || true
@@ -65,14 +64,16 @@ fi
 echo ""
 echo "📦 Step 3: Creating new Latest release from most recent build..."
 
-# Find the most recent build release
-MOST_RECENT=$(gh release list --limit 10 --json tagName,name,createdAt | jq -r '.[] | select(.name | startswith("Build ")) | [.createdAt, .tagName, .name] | @tsv' | sort -r | head -1)
+# Find the most recent build release (sorted by tag name which includes timestamp)
+MOST_RECENT=$(gh release list --limit 10 --json tagName,name | jq -r '.[] | select(.name | startswith("Build ")) | [.tagName, .name] | @tsv' | sort -r | head -1)
 
 if [ -n "$MOST_RECENT" ]; then
-    BUILD_TAG=$(echo "$MOST_RECENT" | cut -f2)
-    BUILD_NAME=$(echo "$MOST_RECENT" | cut -f3)
-    BUILD_DATE=$(echo "$MOST_RECENT" | cut -f1 | cut -d'T' -f1)
-    COMMIT_HASH=$(echo "$BUILD_TAG" | sed 's/build-//')
+    BUILD_TAG=$(echo "$MOST_RECENT" | cut -f1)
+    BUILD_NAME=$(echo "$MOST_RECENT" | cut -f2)
+    # Extract timestamp and commit hash from new tag format: build-YYYYMMDD-HHMMSS-hash
+    TIMESTAMP=$(echo "$BUILD_TAG" | sed 's/build-\([0-9]\{8\}-[0-9]\{6\}\)-.*/\1/')
+    COMMIT_HASH=$(echo "$BUILD_TAG" | sed 's/build-[0-9]\{8\}-[0-9]\{6\}-//')
+    BUILD_DATE=$(echo "$TIMESTAMP" | sed 's/\([0-9]\{4\}\)\([0-9]\{2\}\)\([0-9]\{2\}\)-.*/\1-\2-\3/')
     
     echo "  📥 Found most recent build: $BUILD_TAG"
     echo "  📥 Downloading PDF from $BUILD_TAG..."

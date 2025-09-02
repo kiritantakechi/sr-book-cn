@@ -71,19 +71,22 @@ jobs:
         echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
         echo "commit_message=$(git log -1 --pretty=%B | head -1)" >> $GITHUB_OUTPUT
         echo "commit_date=$(git log -1 --pretty=%cd --date=short)" >> $GITHUB_OUTPUT
+        echo "build_timestamp=$(date +%Y%m%d-%H%M%S)" >> $GITHUB_OUTPUT
+        echo "build_datetime=$(date '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_OUTPUT
         
     - name: Create Release
       if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
       uses: softprops/action-gh-release@v1
       with:
-        tag_name: build-${{ steps.commit.outputs.sha_short }}
-        name: "Build ${{ steps.commit.outputs.sha_short }} - ${{ steps.commit.outputs.commit_date }}"
+        tag_name: build-${{ steps.commit.outputs.build_timestamp }}-${{ steps.commit.outputs.sha_short }}
+        name: "Build ${{ steps.commit.outputs.sha_short }} - ${{ steps.commit.outputs.build_datetime }}"
         body: |
           ## Automated Build
 
           **Commit Message**: ${{ steps.commit.outputs.commit_message }}
           **Commit Hash**: ${{ steps.commit.outputs.sha_short }}
-          **Build Date**: ${{ steps.commit.outputs.commit_date }}
+          **Build Time**: ${{ steps.commit.outputs.build_datetime }}
+          **Commit Date**: ${{ steps.commit.outputs.commit_date }}
 
           This is an automatically built PDF version based on commit ${{ steps.commit.outputs.sha_short }}.
 
@@ -120,14 +123,15 @@ jobs:
     - name: Create Latest release
       if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
       run: |
-        RELEASE_TAG="latest-$(date +%Y%m%d-%H%M%S)"
+        RELEASE_TAG="latest-${{ steps.commit.outputs.build_timestamp }}"
         gh release create "$RELEASE_TAG" book.pdf \
-          --title "Symphonic Rain Chinese Translation - Latest (${{ steps.commit.outputs.commit_date }})" \
+          --title "Symphonic Rain Chinese Translation - Latest (${{ steps.commit.outputs.build_datetime }})" \
           --notes "🎯 **LATEST VERSION** - Download this for the most recent translation.
 
         **Commit**: ${{ steps.commit.outputs.commit_message }}
         **Hash**: ${{ steps.commit.outputs.sha_short }}
-        **Date**: ${{ steps.commit.outputs.commit_date }}
+        **Build Time**: ${{ steps.commit.outputs.build_datetime }}
+        **Commit Date**: ${{ steps.commit.outputs.commit_date }}
 
         📥 Download \`book.pdf\` for the latest Chinese translation." \
           --latest
