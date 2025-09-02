@@ -38,12 +38,15 @@ done
 echo ""
 echo "🗑️ Cleaning up duplicate and old releases..."
 
-# Delete all releases with "Latest" in the title except the most recent one
-echo "  Removing duplicate 'Latest' releases..."
-gh release list --limit 50 | grep -i "latest" | tail -n +2 | while read line; do
+# Delete ALL releases with "Latest" in the title (we'll recreate the proper one later)
+echo "  Removing ALL 'Latest' releases..."
+gh release list --limit 50 | while read line; do
     tag=$(echo "$line" | awk '{print $3}')
-    echo "    Deleting duplicate latest release: $tag"
-    gh release delete "$tag" --yes 2>/dev/null || true
+    title=$(echo "$line" | cut -d$'\t' -f1)
+    if [[ "$title" == *"Latest"* ]] && [ "$tag" != "Draft" ] && [ "$tag" != "" ]; then
+        echo "    Deleting latest release: $tag ($title)"
+        gh release delete "$tag" --yes 2>/dev/null || true
+    fi
 done
 
 # Delete old timestamped releases, keep only 3 most recent
@@ -63,17 +66,47 @@ gh release list --limit 50 | grep "build-" | tail -n +6 | while read line; do
 done
 
 echo ""
-echo "📦 Setting the most recent release as 'latest'..."
+echo "📦 Creating a new 'Latest' release from the most recent build..."
 
-# Find the most recent release (any type) and mark it as latest
-MOST_RECENT=$(gh release list --limit 1 | head -1 | awk '{print $3}')
+# Find the most recent build release
+MOST_RECENT_BUILD=$(gh release list --limit 10 | grep "Build " | head -1 | awk '{print $3}')
 
-if [ -n "$MOST_RECENT" ] && [ "$MOST_RECENT" != "Draft" ]; then
-    echo "  Setting $MOST_RECENT as latest"
-    gh release edit "$MOST_RECENT" --latest=true
-    echo "✅ $MOST_RECENT is now marked as the latest release"
+if [ -n "$MOST_RECENT_BUILD" ] && [ "$MOST_RECENT_BUILD" != "Draft" ]; then
+    echo "  Found most recent build: $MOST_RECENT_BUILD"
+
+    # Get the build info
+    BUILD_INFO=$(gh release view "$MOST_RECENT_BUILD" --json body,createdAt,tagName)
+    BUILD_DATE=$(echo "$BUILD_INFO" | jq -r '.createdAt' | cut -d'T' -f1)
+    COMMIT_HASH=$(echo "$MOST_RECENT_BUILD" | sed 's/build-//')
+
+    # Download the PDF from the most recent build
+    echo "  Downloading PDF from $MOST_RECENT_BUILD..."
+    gh release download "$MOST_RECENT_BUILD" --pattern "book.pdf" --clobber
+
+    # Create new latest release with timestamp
+    LATEST_TAG="latest-$(date +%Y%m%d-%H%M%S)"
+    echo "  Creating new latest release: $LATEST_TAG"
+
+    gh release create "$LATEST_TAG" book.pdf \
+      --title "Symphonic Rain Chinese Translation - Latest ($BUILD_DATE)" \
+      --notes "🎯 **This is the LATEST version** - Always download this one for the most recent translation.
+
+**Latest Build**: $MOST_RECENT_BUILD
+**Commit Hash**: $COMMIT_HASH
+**Build Date**: $BUILD_DATE
+
+📥 Download \`book.pdf\` to get the latest version of the Chinese translation.
+
+---
+*This release is automatically updated with each new commit.*" \
+      --latest
+
+    # Clean up downloaded file
+    rm -f book.pdf
+
+    echo "✅ New latest release created: $LATEST_TAG"
 else
-    echo "⚠️ No releases found to mark as latest"
+    echo "⚠️ No build releases found to create latest from"
 fi
 
 echo ""
