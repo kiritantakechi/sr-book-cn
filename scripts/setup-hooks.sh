@@ -8,14 +8,14 @@ echo "🔧 Setting up Git hooks..."
 mkdir -p .git/hooks
 
 # Copy pre-push hook
-cp scripts/.githooks/pre-push .git/hooks/pre-push
+cp .githooks/pre-push .git/hooks/pre-push
 
 # Make hooks executable
 chmod +x .git/hooks/pre-push
-chmod +x scripts/.githooks/pre-push
+chmod +x .githooks/pre-push
 
 # Configure Git to use our hooks directory (optional, for team sharing)
-git config core.hooksPath scripts/.githooks
+git config core.hooksPath .githooks
 
 echo "✅ Git hooks installed successfully!"
 echo ""

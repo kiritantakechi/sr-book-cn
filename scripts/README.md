@@ -19,7 +19,7 @@ Professional tool to clean up duplicate releases and maintain a clean release hi
 - Uses JSON parsing for reliable operation
 
 ### `setup-hooks.sh` *(Optional)*
-Installs Git hooks to automatically handle `latest` tag conflicts.
+Installs Git hooks from `.githooks/` to automatically handle `latest` tag conflicts.
 
 **Usage:**
 ```bash
