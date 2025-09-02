@@ -5,6 +5,7 @@
 #import "layouts/appendix.typ": appendix
 #import "pages/cover.typ": cover-page
 #import "pages/outline.typ": outline-page
+#import "pages/epilogue.typ": epilogue-page
 
 
 #let book(
@@ -69,6 +70,14 @@
 
     outline: (..args) => {
       outline-page(
+        ..args,
+        twoside: twoside,
+        info: info + args.named().at("info", default: (:)),
+      )
+    },
+
+    epilogue: (..args) => {
+      epilogue-page(
         ..args,
         twoside: twoside,
         info: info + args.named().at("info", default: (:)),
