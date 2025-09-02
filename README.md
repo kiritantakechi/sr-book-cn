@@ -11,7 +11,11 @@ Get the latest PDF from [Releases](https://github.com/kiritantakechi/sr-book-cn/
 This project uses [Typst](https://typst.app/) for document generation.
 
 ```bash
+# Standard build
 typst compile --root . template/book.typ book.pdf
+
+# Archival quality build (recommended)
+typst compile --root . --pdf-standard a-2b template/book.typ book.pdf
 ```
 
 ## License

@@ -46,8 +46,9 @@ jobs:
         
     - name: Build PDF
       run: |
-        # Build the book PDF from template with project root
-        typst compile --root . template/book.typ book.pdf
+        # Build the book PDF with archival quality settings
+        # PDF/A-2b: Maximum compatibility, archival quality, extensive metadata
+        typst compile --root . --pdf-standard a-2b template/book.typ book.pdf
 
         # Verify PDF was created
         if [ ! -f "book.pdf" ]; then
@@ -57,6 +58,7 @@ jobs:
 
         # Show PDF info
         ls -la book.pdf
+        echo "✅ PDF built with PDF/A-2b standard for maximum archival compatibility"
         
     - name: Upload PDF as artifact
       uses: actions/upload-artifact@v4
