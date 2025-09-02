@@ -5,6 +5,7 @@
 #import "layouts/appendix.typ": appendix
 #import "pages/cover.typ": cover-page
 #import "pages/outline.typ": outline-page
+#import "pages/section.typ": section-page
 #import "pages/epilogue.typ": epilogue-page
 
 
@@ -73,6 +74,13 @@
         ..args,
         twoside: twoside,
         info: info + args.named().at("info", default: (:)),
+      )
+    },
+
+    section: (..args) => {
+      section-page(
+        ..args,
+        twoside: twoside,
       )
     },
 

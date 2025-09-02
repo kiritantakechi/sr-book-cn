@@ -10,6 +10,7 @@
   appendix,
   cover,
   outline,
+  section,
   epilogue,
 ) = book(
   cover-image: "../assets/cover.png",
