@@ -104,7 +104,7 @@ jobs:
       uses: dev-drprasad/delete-older-releases@v0.3.4
       with:
         repo: ${{ github.repository }}
-        keep_latest: 5
+        keep_latest: 64
         delete_tag_pattern: "^(latest-|build-)"
         delete_tags: true
         keep_min_download_counts: 0
