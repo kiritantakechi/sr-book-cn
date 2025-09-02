@@ -3,29 +3,22 @@
 # Professional cleanup script using GitHub CLI with proper JSON parsing
 # This script uses more reliable methods to handle GitHub releases
 
-echo "🧹 Professional Release Cleanup Tool"
-echo "===================================="
+echo "🧹 Release Cleanup Tool"
+echo "======================"
 
-# Check if gh CLI is available
-if ! command -v gh &> /dev/null; then
-    echo "❌ GitHub CLI (gh) is not installed or not in PATH"
-    echo "Please install it from: https://cli.github.com/"
-    exit 1
-fi
+# Check dependencies
+for cmd in gh jq; do
+    if ! command -v $cmd &> /dev/null; then
+        echo "❌ $cmd is required but not installed"
+        [ "$cmd" = "gh" ] && echo "Install from: https://cli.github.com/"
+        [ "$cmd" = "jq" ] && echo "Install: brew install jq (macOS) or sudo apt install jq (Ubuntu)"
+        exit 1
+    fi
+done
 
-# Check if jq is available
-if ! command -v jq &> /dev/null; then
-    echo "❌ jq is not installed or not in PATH"
-    echo "Please install jq for JSON parsing"
-    echo "macOS: brew install jq"
-    echo "Ubuntu: sudo apt install jq"
-    exit 1
-fi
-
-# Check if user is authenticated
+# Check authentication
 if ! gh auth status &> /dev/null; then
-    echo "❌ Not authenticated with GitHub CLI"
-    echo "Please run: gh auth login"
+    echo "❌ Not authenticated with GitHub CLI. Run: gh auth login"
     exit 1
 fi
 
@@ -120,9 +113,7 @@ echo "📋 Final release list:"
 gh release list --limit 10
 
 echo ""
-echo "🎉 Professional cleanup completed!"
-echo ""
-echo "Summary:"
-echo "- Deleted all duplicate 'Latest' releases"
-echo "- Cleaned up old build releases (kept 5 most recent)"
-echo "- Created one clean 'Latest' release from most recent build"
+echo "✅ Cleanup completed!"
+echo "- Removed duplicate Latest releases"
+echo "- Kept 5 most recent builds"
+echo "- Created new Latest release"

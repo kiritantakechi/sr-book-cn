@@ -98,50 +98,38 @@ jobs:
       if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
       uses: dev-drprasad/delete-older-releases@v0.3.4
       with:
+        repo: ${{ github.repository }}
         keep_latest: 5
         delete_tag_pattern: "^(latest-|build-)"
         delete_tags: true
+        keep_min_download_counts: 0
+        delete_expired_data: 0
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Delete all existing Latest releases
+    - name: Delete existing Latest releases
       if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
       run: |
-        echo "🗑️ Deleting all existing 'Latest' releases..."
-        # Use GitHub CLI to find and delete releases with "Latest" in title
-        gh release list --limit 50 --json tagName,name | jq -r '.[] | select(.name | contains("Latest")) | .tagName' | while read tag; do
-          if [ -n "$tag" ]; then
-            echo "Deleting latest release: $tag"
-            gh release delete "$tag" --yes --cleanup-tag 2>/dev/null || true
-          fi
+        echo "🗑️ Cleaning up existing Latest releases..."
+        gh release list --limit 20 --json tagName,name | jq -r '.[] | select(.name | contains("Latest")) | .tagName' | while read -r tag; do
+          [ -n "$tag" ] && gh release delete "$tag" --yes --cleanup-tag 2>/dev/null || true
         done
-
-        # Wait for deletions to complete
-        sleep 3
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Create new Latest release
+    - name: Create Latest release
       if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
       run: |
-        # Create new timestamped release and mark it as the only latest
         RELEASE_TAG="latest-$(date +%Y%m%d-%H%M%S)"
-        echo "📦 Creating new latest release: $RELEASE_TAG"
-
         gh release create "$RELEASE_TAG" book.pdf \
           --title "Symphonic Rain Chinese Translation - Latest (${{ steps.commit.outputs.commit_date }})" \
-          --notes "🎯 **This is the LATEST version** - Always download this one for the most recent translation.
+          --notes "🎯 **LATEST VERSION** - Download this for the most recent translation.
 
-        **Latest Commit**: ${{ steps.commit.outputs.commit_message }}
-        **Commit Hash**: ${{ steps.commit.outputs.sha_short }}
-        **Build Date**: ${{ steps.commit.outputs.commit_date }}
+        **Commit**: ${{ steps.commit.outputs.commit_message }}
+        **Hash**: ${{ steps.commit.outputs.sha_short }}
+        **Date**: ${{ steps.commit.outputs.commit_date }}
 
-        📥 Download \`book.pdf\` to get the latest version of the Chinese translation.
-
-        ---
-        *This release is automatically updated with each new commit.*" \
+        📥 Download \`book.pdf\` for the latest Chinese translation." \
           --latest
-
-        echo "✅ Latest release created successfully!"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
