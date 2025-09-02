@@ -94,36 +94,40 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
-    - name: Update latest release
+    - name: Clean up old releases
+      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+      uses: dev-drprasad/delete-older-releases@v0.3.4
+      with:
+        keep_latest: 5
+        delete_tag_pattern: "^(latest-|build-)"
+        delete_tags: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Delete all existing Latest releases
       if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
       run: |
-        # Use a timestamp-based approach to avoid tag conflicts
-        RELEASE_TAG="latest-$(date +%Y%m%d-%H%M%S)"
-
-        # Delete ALL existing releases that contain "Latest" in the title
         echo "🗑️ Deleting all existing 'Latest' releases..."
-        gh release list --limit 50 | while read line; do
-          tag=$(echo "$line" | awk '{print $3}')
-          title=$(echo "$line" | cut -d$'\t' -f1)
-          if [[ "$title" == *"Latest"* ]] && [ "$tag" != "Draft" ] && [ "$tag" != "" ]; then
-            echo "Deleting latest release: $tag ($title)"
-            gh release delete "$tag" --yes 2>/dev/null || true
+        # Use GitHub CLI to find and delete releases with "Latest" in title
+        gh release list --limit 50 --json tagName,name | jq -r '.[] | select(.name | contains("Latest")) | .tagName' | while read tag; do
+          if [ -n "$tag" ]; then
+            echo "Deleting latest release: $tag"
+            gh release delete "$tag" --yes --cleanup-tag 2>/dev/null || true
           fi
         done
 
-        # Clean up old timestamped releases (keep only the most recent 3)
-        echo "🧹 Cleaning up old timestamped releases..."
-        gh release list --limit 50 | grep "latest-" | tail -n +4 | while read line; do
-          tag=$(echo "$line" | awk '{print $3}')
-          echo "Deleting old timestamped release: $tag"
-          gh release delete "$tag" --yes 2>/dev/null || true
-        done
+        # Wait for deletions to complete
+        sleep 3
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-        # Wait a moment for GitHub to process deletions
-        sleep 2
-
+    - name: Create new Latest release
+      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+      run: |
         # Create new timestamped release and mark it as the only latest
+        RELEASE_TAG="latest-$(date +%Y%m%d-%H%M%S)"
         echo "📦 Creating new latest release: $RELEASE_TAG"
+
         gh release create "$RELEASE_TAG" book.pdf \
           --title "Symphonic Rain Chinese Translation - Latest (${{ steps.commit.outputs.commit_date }})" \
           --notes "🎯 **This is the LATEST version** - Always download this one for the most recent translation.
