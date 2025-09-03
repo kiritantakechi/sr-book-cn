@@ -5,6 +5,7 @@
 #import "layouts/appendix.typ": appendix
 #import "pages/cover.typ": cover-page
 #import "pages/outline.typ": outline-page
+#import "pages/comment.typ": comment-page
 #import "pages/section.typ": section-page
 #import "pages/epilogue.typ": epilogue-page
 
@@ -74,6 +75,13 @@
         ..args,
         twoside: twoside,
         info: info + args.named().at("info", default: (:)),
+      )
+    },
+
+    comment: (..args) => {
+      comment-page(
+        ..args,
+        twoside: twoside,
       )
     },
 
