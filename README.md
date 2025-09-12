@@ -22,8 +22,8 @@ typst compile --root . --pdf-standard a-2b template/book.typ book.pdf
 
 ### Content Chapters
 - [x] **Chapter 1**: Prelude
-- [ ] **Chapter 2**: I Part
-- [ ] **Chapter 3**: II Part
+- [x] **Chapter 2**: I Part
+- [ ] **Chapter 3**: II Part (WIP)
 - [ ] **Chapter 4**: III Part
 
 ### Typography & Layout Improvements
