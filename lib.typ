@@ -11,7 +11,6 @@
 
 
 #let book(
-  cover-image: none,
   date: datetime.today(),
   twoside: false,
   info: (:),
@@ -26,7 +25,6 @@
   )
 
   (
-    cover-image: cover-image,
     date: date,
     twoside: twoside,
     info: info,
@@ -60,11 +58,12 @@
       )
     },
 
-    cover: (..args) => {
+    cover: (cover-image: none, rear: false, ..args) => {
         cover-page(
           ..args,
           cover-image: cover-image,
           date: date,
+          rear: rear,
           twoside: twoside,
           info: info + args.named().at("info", default: (:)),
         )
